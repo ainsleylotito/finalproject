@@ -11,7 +11,8 @@ library(readr)
 library(dplyr)
 library(tidyverse)
 library(forcats)
-library(lubridate)
+library(lubridate) 
+library(naniar)
 ```
 
 
@@ -40,17 +41,46 @@ mortality <- mortality %>%
   select(-1,) 
 colnames(mortality) <- tolower(colnames(mortality))
 head(mortality)
+``` 
 
-#changing "Not Reported" to be NA
-mortality <- mortality %>% 
+We are going to explore missing data by reclassifying "Undetermined" and "Not reported" data in a new dataframe and look through some patterns to see if specific causes of death have higher proportions of missing data. 
+```{r}
+#changing "Not Reported" to be NA in different dataset
+mortality_miss <- mortality %>% 
   mutate(across(c(intent, death_group, death_cause),
                 ~ na_if(., "Undetermined")),
          across(c(age_range, activity),
-                 ~ na_if(., "Not Reported")))
-head(mortality)
+                ~ na_if(., "Not Reported"))) 
+gg_miss_var(mortality_miss)
+gg_miss_upset(mortality_miss) 
 
+mortality_miss %>% 
+  mutate(missing = is.na(intent) & is.na(age_range) & is.na(activity)) %>% 
+  group_by(death_cause, missing) %>% 
+  count()
 
+mortality_miss %>% 
+  mutate(missing =  is.na(age_range)) %>% 
+  group_by(death_cause, missing) %>% 
+  count()
+
+#add on later to summarize by proportions and which have highest mortality counts
 ```
 
 
-We are going to subset our data to include years 2007-2016 to be consistent with the other dataset. 
+We are going to subset our data to include years 2007-2016 to be consistent with the other dataset.  
+```{r} 
+#seeing how many obs we are cutting out
+
+ mortality %>% 
+  filter(year %in% c(2020:2024)) %>% 
+   nrow()
+#we are cutting out 2017 ()
+
+mortality <- mortality %>% 
+  filter(year %in% c(2007:2019))
+dim(mortality) 
+unique(mortality$year) 
+```
+
+We now have 3,262 observations (it removed 1,373 obsevations)
