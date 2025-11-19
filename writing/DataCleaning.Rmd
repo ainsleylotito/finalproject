@@ -1,0 +1,21 @@
+---
+title: "DataCleaning"
+author: "Ainsley Lotito"
+date: "2025-11-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Mortality Data
+
+We will start by cleaning the mortality dataset from the national park service. 
+Let's start by reading in the data and looking at the columns. 
+
+```{r}
+library(readr)
+mortality <- read_csv("../data/NPS-Mortality-Data-CY2007-to-CY2024-Released-August-2024.csv", col_names = TRUE)
+head(mortality)
+```
