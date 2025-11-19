@@ -83,4 +83,56 @@ dim(mortality)
 unique(mortality$year) 
 ```
 
-We now have 3,262 observations (it removed 1,373 obsevations)
+We now have 3,262 observations (it removed 1,373 obsevations) 
+
+# Exploratory analysis 
+
+We are interested in looking at patterns of mortality in our data before we join the datasets to think through maps that would be interesting. 
+First, we are going to plan out a chloropleth map that organizes mortality counts in the parks over the whole period (2007-2019) and by each year individually. 
+
+We will start by analyzing this with the summarize function first to look at which parks have the highest mortality counts over each year. 
+```{r}
+#raw count
+mortality %>% 
+  group_by(park) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(park, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3)
+
+``` 
+
+We also want to look into the causes of death and how those contribute to mortality counts. 
+```{r}
+#raw count
+mortality %>% 
+  group_by(death_group) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(death_group, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3) 
+
+#let's do it again by age group 
+#raw count
+mortality %>% 
+  group_by(death_group, age_range) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(death_group, age_range, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3) 
+```
