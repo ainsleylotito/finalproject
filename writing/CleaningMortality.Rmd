@@ -6,8 +6,14 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE) 
+library(readr)  
+library(dplyr)
+library(tidyverse)
+library(forcats)
+library(lubridate)
 ```
+
 
 ## Mortality Data
 
@@ -15,7 +21,36 @@ We will start by cleaning the mortality dataset from the national park service.
 Let's start by reading in the data and looking at the columns. 
 
 ```{r}
-library(readr)
 mortality <- read_csv("../data/NPS-Mortality-Data-CY2007-to-CY2024-Released-August-2024.csv", col_names = TRUE)
+head(mortality) 
+dim(mortality)
+``` 
+
+Mortality read in correctly, we have 9 variables and 4,635 observations. 
+
+We need to reclassify some variables, rename them, and reclassify not reported information as NA. 
+```{r} 
+mortality <- mortality %>% 
+  mutate(incident_date = mdy(`Incident Date`),
+         year = year(incident_date)) %>% #creating year variable to aid with merging with other df
+  rename(park = `Park Name`,
+         death_cause = `Cause of Death`,
+         death_group = 4,
+         age_range = `Age Range`) %>% 
+  select(-1,) 
+colnames(mortality) <- tolower(colnames(mortality))
 head(mortality)
+
+#changing "Not Reported" to be NA
+mortality <- mortality %>% 
+  mutate(across(c(intent, death_group, death_cause),
+                ~ na_if(., "Undetermined")),
+         across(c(age_range, activity),
+                 ~ na_if(., "Not Reported")))
+head(mortality)
+
+
 ```
+
+
+We are going to subset our data to include years 2007-2016 to be consistent with the other dataset. 
