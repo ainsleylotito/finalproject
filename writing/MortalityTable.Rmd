@@ -11,19 +11,30 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
-library(leaflet)
 library(DT)
-library(plotly)
 ```
 
 ```{r}
 MortalityData<- read.csv("../data/mortality_clean.csv")
 mortalityCount<- MortalityData%>%
   mutate(death_count=1)%>%
-  select(park, death_cause, age_range, death_count)
+  select(park, death_cause, age_range, death_count)%>%
+  group_by(park, death_cause, age_range) %>%
+  summarize(death_count, .groups = "drop")%>%
+  ungroup()
+
 datatable(mortalityCount, options = list(pageLength = 5))
 
 ```
 
+```{r}
+mortalityCount<- MortalityData %>%
+  group_by(park, death_cause, age_range)%>%
+  summarize(deaths = n(), .groups = "drop")%>%
+  group_by(park)%>%
+  mutate(total_deaths= sum(deaths))
+
+datatable(mortalityCount, options = list(pageLength = 5))
+```
 
 
