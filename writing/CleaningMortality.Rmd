@@ -83,7 +83,14 @@ dim(mortality)
 unique(mortality$year) 
 ```
 
-We now have 3,262 observations (it removed 1,373 obsevations) 
+We now have 3,262 observations (it removed 1,373 obsevations)  
+
+### Saving cleaned dataset 
+We are going to save the cleaned mortality df to our data folder so it can be joined with the National Park dataframe for future analysis. 
+
+```{r}
+write.csv(mortality, "../data/mortality_clean.csv", row.names = TRUE)
+```
 
 # Exploratory analysis 
 
