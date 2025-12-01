@@ -17,6 +17,7 @@ NPVisitCleaned <- read.csv("../data/NPVisitCleaned.csv")
 AnalysisMerged<- full_join(mortality_clean, NPVisitCleaned, by = c("park" = "Parkname"))
 
 write.csv(AnalysisMerged, "../data/AnalysisMerged.csv")
+MergedData<- read.csv("../data/AnalysisMerged.csv")
 ```
 
 
