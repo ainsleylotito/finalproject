@@ -14,6 +14,7 @@ library(dplyr)
 library(tidyverse)
 mortality_clean <- read.csv("../data/mortality_clean.csv")
 NPVisitCleaned <- read.csv("../data/NPVisitCleaned.csv")
+NPVisitbyYearCleaned<- read.csv("../data/NPVisitbyYearCleaned.csv")
 AnalysisMerged<- full_join(mortality_clean, NPVisitCleaned, by = c("park" = "Parkname"))
 
 write.csv(AnalysisMerged, "../data/AnalysisMerged.csv")
