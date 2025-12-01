@@ -6,8 +6,15 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE) 
+library(readr)  
+library(dplyr)
+library(tidyverse)
+library(forcats)
+library(lubridate) 
+library(naniar)
 ```
+
 
 ## Mortality Data
 
@@ -15,7 +22,124 @@ We will start by cleaning the mortality dataset from the national park service.
 Let's start by reading in the data and looking at the columns. 
 
 ```{r}
-library(readr)
 mortality <- read_csv("../data/NPS-Mortality-Data-CY2007-to-CY2024-Released-August-2024.csv", col_names = TRUE)
+head(mortality) 
+dim(mortality)
+``` 
+
+Mortality read in correctly, we have 9 variables and 4,635 observations. 
+
+We need to reclassify some variables, rename them, and reclassify not reported information as NA. 
+```{r} 
+mortality <- mortality %>% 
+  mutate(incident_date = mdy(`Incident Date`),
+         year = year(incident_date)) %>% #creating year variable to aid with merging with other df
+  rename(park = `Park Name`,
+         death_cause = `Cause of Death`,
+         death_group = 4,
+         age_range = `Age Range`) %>% 
+  select(-1,) 
+colnames(mortality) <- tolower(colnames(mortality))
 head(mortality)
+``` 
+
+We are going to explore missing data by reclassifying "Undetermined" and "Not reported" data in a new dataframe and look through some patterns to see if specific causes of death have higher proportions of missing data. 
+```{r}
+#changing "Not Reported" to be NA in different dataset
+mortality_miss <- mortality %>% 
+  mutate(across(c(intent, death_group, death_cause),
+                ~ na_if(., "Undetermined")),
+         across(c(age_range, activity),
+                ~ na_if(., "Not Reported"))) 
+gg_miss_var(mortality_miss)
+gg_miss_upset(mortality_miss) 
+
+mortality_miss %>% 
+  mutate(missing = is.na(intent) & is.na(age_range) & is.na(activity)) %>% 
+  group_by(death_cause, missing) %>% 
+  count()
+
+mortality_miss %>% 
+  mutate(missing =  is.na(age_range)) %>% 
+  group_by(death_cause, missing) %>% 
+  count()
+
+#add on later to summarize by proportions and which have highest mortality counts
+```
+
+
+We are going to subset our data to include years 2007-2016 to be consistent with the other dataset.  
+```{r} 
+#seeing how many obs we are cutting out
+
+ mortality %>% 
+  filter(year %in% c(2020:2024)) %>% 
+   nrow()
+#we are cutting out 2017 ()
+
+mortality <- mortality %>% 
+  filter(year %in% c(2007:2019))
+dim(mortality) 
+unique(mortality$year) 
+```
+
+We now have 3,262 observations (it removed 1,373 obsevations)  
+
+### Saving cleaned dataset 
+We are going to save the cleaned mortality df to our data folder so it can be joined with the National Park dataframe for future analysis. 
+
+```{r}
+write.csv(mortality, "../data/mortality_clean.csv", row.names = TRUE)
+```
+
+# Exploratory analysis 
+
+We are interested in looking at patterns of mortality in our data before we join the datasets to think through maps that would be interesting. 
+First, we are going to plan out a chloropleth map that organizes mortality counts in the parks over the whole period (2007-2019) and by each year individually. 
+
+We will start by analyzing this with the summarize function first to look at which parks have the highest mortality counts over each year. 
+```{r}
+#raw count
+mortality %>% 
+  group_by(park) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(park, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3)
+
+``` 
+
+We also want to look into the causes of death and how those contribute to mortality counts. 
+```{r}
+#raw count
+mortality %>% 
+  group_by(death_group) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(death_group, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3) 
+
+#let's do it again by age group 
+#raw count
+mortality %>% 
+  group_by(death_group, age_range) %>%  
+  summarize(mortality_count = n()) %>% 
+  arrange(desc(mortality_count)) 
+
+#top 3 by year 
+mortality %>% 
+  group_by(death_group, age_range, year) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(year) %>% 
+  slice_max(mortality_count, n = 3) 
 ```
