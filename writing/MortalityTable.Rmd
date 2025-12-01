@@ -1,0 +1,29 @@
+---
+title: "MortalityTable"
+author: "Neda Safari"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(leaflet)
+library(DT)
+library(plotly)
+```
+
+```{r}
+MortalityData<- read.csv("../data/mortality_clean.csv")
+mortalityCount<- MortalityData%>%
+  mutate(death_count=1)%>%
+  select(park, death_cause, age_range, death_count)
+datatable(mortalityCount, options = list(pageLength = 5))
+
+```
+
+
+
