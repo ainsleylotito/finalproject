@@ -33,5 +33,6 @@ total_park_visit<- joind_loc_visit%>%
 
 joind_total_loc<- left_join(total_park_visit, locationNP, by= c("gnis_id"= "gnis_id"))
 
+write.csv(joind_total_loc, "../data/NPVisitCleaned.csv")
 ```
 
