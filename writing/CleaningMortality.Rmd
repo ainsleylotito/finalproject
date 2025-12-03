@@ -141,5 +141,124 @@ mortality %>%
   group_by(death_group, age_range, year) %>%  
   summarize(mortality_count = n(), .groups = "drop") %>% 
   group_by(year) %>% 
-  slice_max(mortality_count, n = 3) 
+  slice_max(mortality_count, n = 3)  
+
+#top 3 by park 
+mortality %>% 
+  group_by(death_group, age_range, park) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(death_group,age_range) %>% 
+  slice_max(mortality_count, n = 1) 
+``` 
+
+Let's explore some leaflet bar charts with different information on cause of death.  
+
+```{r}
+library(plotly)
+
+#starting simple plot  
+cod_count <- mortality %>% 
+  group_by(death_group) %>%  
+  summarize(mortality_count = n(), .groups = "drop")
+
+cod_plot <-plot_ly(
+  data = cod_count,
+  x = ~death_group,
+  y = ~mortality_count, 
+  name = "Death Counts by Cause of Death", 
+  type = "bar"
+) 
+cod_plot <- cod_plot %>% layout(yaxis = list(title = 'Mortality Count'), barmode = 'group') %>% layout(xaxis = list(title = 'Cause of Death'), barmode = 'group')
+
+cod_plot
+``` 
+We can probably condense "Legal Intervention" in the Other category since there are only 2 deaths over the entire period. These deaths are due to people being killed or dying as a result of injuries from a law enforcement officer. 
+
+We are going to condense the Medical categories together, since there is no information about whether the PA caused the medical event to occur, just that it happened simultaneously. 
+
+I am going to create a new variable that has these cleaned up, and then summarize before creating a new basic plot then moving on with more details. I am also going to make an even BROADER categorization, which removes some information but will be useful in figuring out which parks have larger general trends for mortality causes. 
+
+```{r}
+mortality <- mortality %>% 
+  mutate(cod = case_when( 
+    # Medical
+    death_group %in% c("Medical - Not during physical activity", "Medical - Unknown", "Medical - During physical activity") ~ "Medical", 
+    
+    #Condensing Legal Intervention with Other
+    death_group %in% c("Legal Intervention", "Other") ~ "Other", 
+    
+    #All other categories Consistent
+    TRUE ~ death_group #keep original death_group codings
+  ), 
+  cod_broad = case_when(
+      # Medical
+      death_group %in% c(
+        "Medical - During physical activity",
+        "Medical - Not during physical activity",
+        "Medical - Unknown"
+      ) ~ "Medical",
+
+      # Unintentional Injury - Water
+      death_group == "Drowning" ~ "Unintentional - Water",
+
+      # Unintentional Injury - Falls
+      death_group == "Fall" ~ "Unintentional - Fall",
+
+      # Transportation
+      death_group %in% c("Motor Vehicle Crash", "Other Transportation") ~ 
+        "Unintentional - Transportation",
+
+      # Environmental & Wildlife
+      death_group %in% c("Environmental", "Wildlife Incident") ~
+        "Unintentional - Environmental",
+
+      # Poisoning
+      death_group == "Poisoning" ~ "Unintentional - Poisoning",
+
+      # Intentional
+      death_group == "Suicide" ~ "Intentional - Suicide",
+      death_group == "Homicide" ~ "Intentional - Homicide",
+      death_group == "Legal Intervention" ~ "Intentional - Homicide",
+
+      # Other / Undetermined
+      death_group %in% c("Other", "Undetermined") ~ "Other / Undetermined",
+
+      TRUE ~ "Other / Undetermined"
+    )) 
 ```
+
+Now, let's create two new plots with these new categorizations: 
+```{r} 
+#COD
+#starting simple plot  
+cod_count <- mortality %>% 
+  group_by(cod) %>%  
+  summarize(mortality_count = n(), .groups = "drop")
+
+cod_plot <-plot_ly(
+  data = cod_count,
+  x = ~cod,
+  y = ~mortality_count, 
+  name = "Death Counts by Cause of Death", 
+  type = "bar"
+) 
+cod_plot <- cod_plot %>% layout(yaxis = list(title = 'Mortality Count'), barmode = 'group') %>% layout(xaxis = list(title = 'Cause of Death'), barmode = 'group')
+
+cod_plot 
+
+#COD Broad 
+cod_broad_count <- mortality %>% 
+  group_by(cod_broad) %>%  
+  summarize(mortality_count = n(), .groups = "drop")
+
+cod_broad_count <-plot_ly(
+  data = cod_broad_count,
+  x = ~cod_broad,
+  y = ~mortality_count, 
+  name = "Death Counts by Cause of Death", 
+  type = "bar"
+) 
+cod_broad_count <- cod_broad_count %>% layout(yaxis = list(title = 'Mortality Count'), barmode = 'group') %>% layout(xaxis = list(title = 'Cause of Death'), barmode = 'group')
+
+cod_broad_count 
+``` 
