@@ -17,11 +17,10 @@ library(DT)
 ```{r}
 MortalityData<- read.csv("../data/mortality_clean.csv")
 mortalityCount<- MortalityData%>%
-  mutate(death_count=1)%>%
-  select(park, death_cause, age_range, death_count)%>%
   group_by(park, death_cause, age_range) %>%
-  summarize(death_count, .groups = "drop")%>%
-  ungroup()
+  summarize(death_count=n())%>%
+  ungroup()%>%
+  arrange(desc(death_count))
 
 datatable(mortalityCount, options = list(pageLength = 5))
 
