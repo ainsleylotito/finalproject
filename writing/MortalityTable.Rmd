@@ -26,14 +26,5 @@ datatable(mortalityCount, options = list(pageLength = 5))
 
 ```
 
-```{r}
-mortalityCount<- MortalityData %>%
-  group_by(park, death_cause, age_range)%>%
-  summarize(deaths = n(), .groups = "drop")%>%
-  group_by(park)%>%
-  mutate(total_deaths= sum(deaths))
-
-datatable(mortalityCount, options = list(pageLength = 5))
-```
 
 
