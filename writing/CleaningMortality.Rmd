@@ -266,7 +266,7 @@ cod_broad_count
 Now, I want to explore how cause of death changes based on some other facets. 
 I want to explore how the distribution of deaths by age group change depending on COD (facet by COD, bars are age groups).  
 I will make a plot for the first COD categorization first: 
-```{r, fig.height = 15, fig.width = 10}
+```{r cod_by_age, fig.height = 15, fig.width = 10}
 #COD simple 
 
 #creating df with needed data 
@@ -280,10 +280,36 @@ p_age <- ggplot(cod_by_age, aes(x = age_range, y = mortality_count)) +
   facet_wrap(~ cod, ncol = 2) +
   labs(title = "Death Counts by Cause of Death and Age",
        x = "Victim Age Group", 
-       y = "Death Count")
+       y = "Death Count") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 cod_by_age_plot <- ggplotly(p_age)
 cod_by_age_plot
+
+```
+
+Next, using the broad COD categorization:  
+```{r cod_by_age, fig.height = 15, fig.width = 10}
+#COD broad 
+
+#creating df with needed data 
+codb_by_age <- mortality %>% 
+  group_by(cod_broad, age_range) %>%  
+  summarize(mortality_count = n(), .groups = "drop")  
+
+#plotting 
+p_ageb <- ggplot(codb_by_age, aes(x = age_range, y = mortality_count)) +
+  geom_col() +
+  facet_wrap(~ cod_broad, ncol = 2) +
+  labs(title = "Death Counts by Cause of Death and Age",
+       x = "Victim Age Group", 
+       y = "Death Count") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+codb_by_age_plot <- ggplotly(p_ageb)
+codb_by_age_plot
 
 ```
 
