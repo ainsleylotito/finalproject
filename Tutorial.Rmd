@@ -1,0 +1,18 @@
+---
+title: "Tutorial"
+author: "Neda Safari"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+    Interesting packages / techniques: Spend a bit more time on any parts that you found particularly interesting or exciting. Were there packages you used that were helpful that we haven’t talked about in class? Did you find out how to do anything that you think other students could use in the future? Did you end up writing a lot of functions to use? Did you have an interesting way of sharing code and data among your group members?
+    
+    
+    
+    Lessons learned: If you were to do this project again from scratch, what would you do differently? Were there any big wrong turns along the way? Did you find out how to do something late in the project that would have saved you time if you’d started using it earlier?
+
