@@ -23,6 +23,7 @@ library(treemap)
 library(arules)
 library(flexdashboard)
 
+
 thm <- 
   hc_theme(
     colors = c("#1a6ecc", "#434348", "#90ed7d"),
@@ -43,10 +44,17 @@ Column {data-width=600}
 ### Sales Forecast
 
 ```{r}
-AirPassengers %>% 
-  forecast(level = 90) %>% 
-  hchart() %>% 
-  hc_add_theme(thm)
+library(tidyverse)
+library(DT)
+MortalityData<- read.csv("../data/mortality_clean.csv")
+mortalityCount<- MortalityData%>%
+  group_by(park, death_cause, age_range) %>%
+  summarize(death_count=n())%>%
+  ungroup()%>%
+  arrange(desc(death_count))
+
+datatable(mortalityCount, options = list(pageLength = 5))
+
 ```
 
 ### Sales by State
