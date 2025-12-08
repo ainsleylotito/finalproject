@@ -6,13 +6,15 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE) 
+knitr::opts_chunk$set(echo = TRUE, error = TRUE) 
 library(readr)  
 library(dplyr)
 library(tidyverse)
 library(forcats)
 library(lubridate) 
-library(naniar)
+library(naniar) 
+library(plotly) 
+library(ggplot2)
 ```
 
 
@@ -103,7 +105,8 @@ We will start by analyzing this with the summarize function first to look at whi
 mortality %>% 
   group_by(park) %>%  
   summarize(mortality_count = n()) %>% 
-  arrange(desc(mortality_count)) 
+  arrange(desc(mortality_count))  
+
 
 #top 3 by year 
 mortality %>% 
@@ -266,7 +269,7 @@ cod_broad_count
 Now, I want to explore how cause of death changes based on some other facets. 
 I want to explore how the distribution of deaths by age group change depending on COD (facet by COD, bars are age groups).  
 I will make a plot for the first COD categorization first: 
-```{r, fig.height = 15, fig.width = 10}
+```{r cod_by_age, fig.height = 25, fig.width = 9}
 #COD simple 
 
 #creating df with needed data 
@@ -274,20 +277,78 @@ cod_by_age <- mortality %>%
   group_by(cod, age_range) %>%  
   summarize(mortality_count = n(), .groups = "drop")  
 
+#going to reorder by cods with most deaths in general 
+cod_order <- cod_by_age %>%
+  group_by(cod) %>%
+  summarize(total_mort = sum(mortality_count)) %>%
+  arrange(desc(total_mort))
+cod_by_age$cod <- factor(cod_by_age$cod, levels = cod_order$cod)
+
+
 #plotting 
 p_age <- ggplot(cod_by_age, aes(x = age_range, y = mortality_count)) +
   geom_col() +
-  facet_wrap(~ cod, ncol = 2) +
+  facet_wrap(~ cod, ncol = 2, scales = "free_x") +
   labs(title = "Death Counts by Cause of Death and Age",
        x = "Victim Age Group", 
-       y = "Death Count")
+       y = "Death Count") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+    scale_y_continuous(breaks = c(seq(from = 0, to = 200, by = 25)
+)) +
+  theme(axis.text.x = element_text (size = 8),
+        strip.text = element_text(size = 11, face = "bold"))
 
 cod_by_age_plot <- ggplotly(p_age)
-cod_by_age_plot
+cod_by_age_plot 
+
+``` 
+This is the plot option that we decided to put in our flexdashboard, so there is some extra code cleaning it up. I also am going to continue exploration below, but we didn't end up using any of the following maps. 
+
+Next, using the broad COD categorization:  
+```{r codb_by_age, fig.height = 15, fig.width = 10}
+#COD broad 
+
+#creating df with needed data 
+codb_by_age <- mortality %>% 
+  group_by(cod_broad, age_range) %>%  
+  summarize(mortality_count = n(), .groups = "drop")  
+
+#plotting 
+p_ageb <- ggplot(codb_by_age, aes(x = age_range, y = mortality_count)) +
+  geom_col() +
+  facet_wrap(~ cod_broad, ncol = 2) +
+  labs(title = "Death Counts by Cause of Death and Age",
+       x = "Victim Age Group", 
+       y = "Death Count") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+codb_by_age_plot <- ggplotly(p_ageb)
+codb_by_age_plot
 
 ```
 
 Now, I want to look at which Parks have the highest death count for each of these categories. For each COD, I am going to show the Parks with the top 5-10 death counts for each COD.  
-```{r}
+```{r, fig.width = 8, fig.height = 7}
+cod_park <- mortality %>% 
+  group_by(cod, park, age_range) %>%  
+  summarize(mortality_count = n(), .groups = "drop") %>% 
+  group_by(cod, park) %>% 
+  slice_max(mortality_count, n = 3) 
 
+p <- ggplot(cod_park, aes(
+  x = age_range,
+  y = mortality_count,
+  fill = park,
+  text = paste("Park:", park,
+               "<br>Age Range:", age_range,
+               "<br>Count:", mortality_count)
+)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~cod) +
+  labs(x = "Age Range", y = "Mortality Count") +
+  theme_bw()
+
+ggplotly(p, tooltip = "text")
 ```
