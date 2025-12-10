@@ -300,7 +300,9 @@ p_age <- ggplot(cod_by_age, aes(x = age_range, y = mortality_count)) +
         strip.text = element_text(size = 11, face = "bold"))
 
 cod_by_age_plot <- ggplotly(p_age)
-cod_by_age_plot 
+cod_by_age_plot  
+
+#look into shiny embedding https://testing-apps.shinyapps.io/flexdashboard-shiny-embedding/
 
 ``` 
 This is the plot option that we decided to put in our flexdashboard, so there is some extra code cleaning it up. I also am going to continue exploration below, but we didn't end up using any of the following maps. 
