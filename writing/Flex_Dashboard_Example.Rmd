@@ -135,13 +135,5 @@ server <- function(input, output) { #server- takes inputs, produce output
 shinyApp(ui, server) #ui=page layout for shiny, server= plotly 
 #runs the App using the UI and server we just defined
 
-#note: when setting up, make sure to include runtime:shiny???
-#---
-#title: "COD Dashboard"
-#output: 
- # flexdashboard::flex_dashboard:
- #   orientation: columns
-#runtime: shiny
-#---
 ```
 
