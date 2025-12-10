@@ -418,6 +418,8 @@ write.csv(park_map_data, "../data/park_map_data.csv")
 
 
 ```{r}
+library(tidyverse)
+library(highcharter)
 park_map_data <- read.csv("../data/park_map_data.csv")
 # Create the interactive map
 # hcmap() creates a base map of the United States

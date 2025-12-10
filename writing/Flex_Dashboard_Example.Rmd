@@ -40,29 +40,40 @@ thm <-
 ### Sales Forecast
 
 ```{r}
-data("USArrests", package = "datasets")
-data("usgeojson")
-
-USArrests <- USArrests %>%
-  mutate(state = rownames(.))
-
-n <- 4
-colstops <- data.frame(
-  q = 0:n/n,
-  c = substring(viridis(n + 1), 0, 7)) %>%
-  list_parse2()
-
-highchart() %>%
-  hc_add_series_map(usgeojson, USArrests, name = "Sales",
-                    value = "Murder", joinBy = c("woename", "state"),
-                    dataLabels = list(enabled = TRUE,
-                                      format = '{point.properties.postalcode}')) %>%
-  hc_colorAxis(stops = colstops) %>%
-  hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
+library(tidyverse)
+library(highcharter)
+park_map_data <- read.csv("../data/park_map_data.csv")
+# Create the interactive map
+# hcmap() creates a base map of the United States
+# "countries/us/us-all" specifies we want a US map
+# nullColor sets the color for states/areas without data
+# borderWidth sets how thick the state borders are
+# showInLegend = FALSE hides the base map from the legend
+hcmap("countries/us/us-all", 
+      nullColor = "#d3d3d3",
+      borderWidth = 0.5,
+      showInLegend = FALSE) %>%
+  # hc_add_series adds a new layer to the map - in this case, bubbles
+  hc_add_series(
+    data = park_map_data,  # The data frame with park locations and death counts
+    type = "mapbubble",  # Create bubbles on the map
+    name = "Deaths",  # Legend label
+    minSize = 5,  # Smallest bubble size (in pixels)
+    maxSize = 50,  # Largest bubble size (in pixels)
+    color = "#FF0000",  # Bubble color (red)
+    dataLabels = list(enabled = FALSE)  # Don't show labels on the bubbles themselves
+  ) %>%
+  # hc_tooltip configures what appears when you hover over a bubble
+  hc_tooltip(
+    useHTML = TRUE,  # Allow HTML formatting in the tooltip
+    headerFormat = '',  # No header in the tooltip
+    # pointFormat defines what text shows: park name and death count
+    pointFormat = "<b>{point.park}</b><br/>Total Deaths: {point.total_deaths}"
+  ) %>%
+  # hc_mapNavigation adds zoom and pan controls to the map
   hc_mapNavigation(enabled = TRUE) %>%
-  hc_add_theme(thm)
-
-
+  # hc_title adds a title at the top of the map
+  hc_title(text = "National Park Mortality Counts")
 ```
 
 ### Death Table in National Parks
