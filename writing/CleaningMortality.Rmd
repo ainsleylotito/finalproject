@@ -250,7 +250,7 @@ mortality <- read.csv("../data/mortality_clean.csv")
 #shiny in here 
 library(shiny)
 
-# your data creation
+# summarizing cod by age
 cod_by_age <- mortality %>% 
   group_by(cod, age_range) %>%  
   summarize(mortality_count = n(), .groups = "drop")
@@ -263,23 +263,23 @@ cod_order <- cod_by_age %>%
 cod_by_age$cod <- factor(cod_by_age$cod, levels = cod_order$cod)
 
 #UI Function
-ui <- fluidPage(
-  sidebarLayout(
-    sidebarPanel(
+ui <- fluidPage( #creates a fluidPage
+  sidebarLayout( #creates sidebar on the left
+    sidebarPanel( #what's in the sidebar
       selectInput("cod_choice", "Select Cause of Death:", 
-                  choices = levels(cod_by_age$cod))
+                  choices = levels(cod_by_age$cod)) #cod_choic is input ID, "Select Cause of Death:" is label shown, choices -- populate the dropdown with faactor levels from the cod column
     ),
-    mainPanel(
-      plotlyOutput("codPlot")
+    mainPanel( #starting the main panel
+      plotlyOutput("codPlot") #placeholder for a plotly plot
     )
   )
 )
 
-server <- function(input, output) {
-  output$codPlot <- renderPlotly({
+server <- function(input, output) { #server- takes inputs, produce output
+  output$codPlot <- renderPlotly({ #create reacative plotly output named "codPlot". everything INSIDE CURLY runs when the user changes the dropdown
     
     filtered <- cod_by_age %>% 
-      filter(cod == input$cod_choice)
+      filter(cod == input$cod_choice) #only include rows where cod= user's selection
     
     p <- ggplot(filtered, aes(x = age_range, y = mortality_count)) +
       geom_col() +
@@ -289,12 +289,13 @@ server <- function(input, output) {
         y = "Death Count"
       ) +
       theme_classic()
-    
-    ggplotly(p)
+    #ggplot of the filtered data 
+    ggplotly(p) #turns into plotly
   })
 }
 
-shinyApp(ui, server) #ui=page layout for shiny, server= plotly
+shinyApp(ui, server) #ui=page layout for shiny, server= plotly 
+#runs the App using the UI and server we just defined
 
 #note: when setting up, make sure to include runtime:shiny???
 #---
