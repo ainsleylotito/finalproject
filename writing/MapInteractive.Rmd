@@ -1,0 +1,123 @@
+---
+title: "Interactive Map"
+author: "Neda Safari"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(highcharter)
+
+# Load your data
+MortalityData <- read.csv("../data/mortality_clean.csv")
+NPVisit <- read.csv("../data/NPVisitCleaned.csv")
+
+# Print the first 20 park names from the mortality dataset (sorted alphabetically)
+# This helps us see what format the park names are in
+print("Sample park names from MortalityData:")
+print(head(sort(unique(MortalityData$park)), 20))
+
+# Print the first 20 park names from the visitor dataset (sorted alphabetically)
+# This helps us compare naming conventions between the two datasets
+print("\nSample park names from NPVisit:")
+print(head(sort(unique(NPVisit$Parkname)), 20))
+
+# Create a function to standardize park names for matching
+# This function takes a park name and simplifies it by:
+standardize_name <- function(name) {
+  name %>%
+    tolower() %>%  # Convert everything to lowercase (e.g., "Yosemite" becomes "yosemite")
+    str_remove_all("national park|national monument|national recreation area") %>%  # Remove common park designations
+    str_remove_all("\\b(the|and|of)\\b") %>%  # Remove filler words like "the", "and", "of"
+    str_squish() %>%  # Replace multiple spaces with a single space
+    str_trim()  # Remove leading and trailing whitespace
+}
+
+# Add a new column to MortalityData with the standardized park name
+# This creates "park_std" which will be used for matching
+MortalityData <- MortalityData %>%
+  mutate(park_std = standardize_name(park))
+
+# Add a new column to NPVisit with the standardized park name
+# Now both datasets have a "park_std" column with comparable names
+NPVisit <- NPVisit %>%
+  mutate(park_std = standardize_name(Parkname))
+
+# Count how many deaths occurred at each park
+# group_by(park, park_std) groups rows by both original and standardized names
+# summarize(total_deaths = n()) counts the number of rows (deaths) in each group
+# .groups = "drop" removes the grouping structure after summarizing
+parkDeaths <- MortalityData %>%
+  group_by(park, park_std) %>%
+  summarize(total_deaths = n(), .groups = "drop")
+
+# Join the death counts with the park location data
+# left_join keeps all parks from parkDeaths and adds matching data from NPVisit
+# by = "park_std" means we're matching on the standardized park names
+# filter(!is.na(lat) & !is.na(lon)) removes any parks that don't have coordinates
+# mutate(z = total_deaths) creates a "z" column (needed by highcharter for bubble size)
+park_map_data <- parkDeaths %>%
+  left_join(NPVisit, by = "park_std") %>%
+  filter(!is.na(lat) & !is.na(lon)) %>%
+  mutate(z = total_deaths)
+
+# Print how many parks successfully matched and have coordinates
+print("\nNumber of parks matched:")
+print(nrow(park_map_data))
+
+# Find parks that have deaths but couldn't be matched to coordinates
+# anti_join returns rows from parkDeaths that DON'T have a match in NPVisit
+missing_coords <- parkDeaths %>%
+  anti_join(NPVisit, by = "park_std")
+
+# If there are unmatched parks, print a warning message with details
+if(nrow(missing_coords) > 0) {
+  message("\nWarning: The following parks are missing coordinates:")
+  # Show only the park name and death count for the unmatched parks
+  print(missing_coords %>% select(park, total_deaths))
+}
+
+# Only create the map if we successfully matched at least one park
+if(nrow(park_map_data) > 0) {
+  # hcmap() creates a base map of the United States
+  # "countries/us/us-all" specifies we want a US map
+  # nullColor sets the color for states/areas without data
+  # borderWidth sets how thick the state borders are
+  hcmap("countries/us/us-all", 
+        nullColor = "#d3d3d3",
+        borderWidth = 0.5) %>%
+    # hc_add_series adds a new layer to the map - in this case, bubbles
+    hc_add_series(
+      data = park_map_data,  # The data frame with park locations and death counts
+      type = "mapbubble",  # Create bubbles on the map
+      name = "Deaths",  # Legend label
+      minSize = 5,  # Smallest bubble size (in pixels)
+      maxSize = 50,  # Largest bubble size (in pixels)
+      color = "#FF0000",  # Bubble color (red)
+      dataLabels = list(enabled = FALSE)  # Don't show labels on the bubbles themselves
+    ) %>%
+    # hc_tooltip configures what appears when you hover over a bubble
+    hc_tooltip(
+      useHTML = TRUE,  # Allow HTML formatting in the tooltip
+      headerFormat = '',  # No header in the tooltip
+      # pointFormat defines what text shows: park name and death count
+      pointFormat = "<b>{point.park}</b><br/>Total Deaths: {point.total_deaths}"
+    ) %>%
+    # hc_mapNavigation adds zoom and pan controls to the map
+    hc_mapNavigation(enabled = TRUE) %>%
+    # hc_title adds a title at the top of the map
+    hc_title(text = "National Park Mortality Counts")
+} else {
+  # If no parks matched, print an error message
+  message("No parks could be matched. Manual mapping may be required.")
+}
+```
+
+
+
