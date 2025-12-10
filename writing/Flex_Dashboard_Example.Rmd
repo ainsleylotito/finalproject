@@ -5,7 +5,8 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns
     social: menu
-    source_code: embed
+    source_code: embed 
+    runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +16,9 @@ library(viridisLite)
 library(forecast)
 library(treemap)
 library(arules)
-library(flexdashboard)
+library(flexdashboard) 
+library(shiny)
+library(plotly)
 
 
 thm <- 
@@ -80,44 +83,65 @@ datatable(mortalityCount, options = list(pageLength = 5))
 
 ## Column {.tabset data-width="400"}
 
-### Sales by Category
+### Deaths by Cause and Age Range
 
 ```{r, fig.keep='none'}
-data("Groceries", package = "arules")
-dfitems <- tbl_df(Groceries@itemInfo)
+mortality <- read.csv("../data/mortality_clean.csv")
 
-set.seed(10)
+# summarizing cod by age
+cod_by_age <- mortality %>% 
+  group_by(cod, age_range) %>%  
+  summarize(mortality_count = n(), .groups = "drop")
 
-dfitemsg <- dfitems %>%
-  mutate(category = gsub(" ", "-", level1),
-         subcategory = gsub(" ", "-", level2)) %>%
-  group_by(category, subcategory) %>% 
-  summarise(sales = n() ^ 3 ) %>% 
-  ungroup() %>% 
-  sample_n(31)
+cod_order <- cod_by_age %>%
+  group_by(cod) %>%
+  summarize(total_mort = sum(mortality_count)) %>%
+  arrange(desc(total_mort))
 
-tm <- treemap(dfitemsg, index = c("category", "subcategory"),
-              vSize = "sales", vColor = "sales",
-              type = "value", palette = rev(viridis(6)))
+cod_by_age$cod <- factor(cod_by_age$cod, levels = cod_order$cod)
 
-hctreemap(tm, allowDrillToNode = TRUE, layoutAlgorithm = "squarified") %>% 
-  hc_add_theme(thm)
+#UI Function
+ui <- fluidPage( #creates a fluidPage
+  sidebarLayout( #creates sidebar on the left
+    sidebarPanel( #what's in the sidebar
+      selectInput("cod_choice", "Select Cause of Death:", 
+                  choices = levels(cod_by_age$cod)) #cod_choic is input ID, "Select Cause of Death:" is label shown, choices -- populate the dropdown with faactor levels from the cod column
+    ),
+    mainPanel( #starting the main panel
+      plotlyOutput("codPlot") #placeholder for a plotly plot
+    )
+  )
+)
+
+server <- function(input, output) { #server- takes inputs, produce output
+  output$codPlot <- renderPlotly({ #create reacative plotly output named "codPlot". everything INSIDE CURLY runs when the user changes the dropdown
+    
+    filtered <- cod_by_age %>% 
+      filter(cod == input$cod_choice) #only include rows where cod= user's selection
+    
+    p <- ggplot(filtered, aes(x = age_range, y = mortality_count)) +
+      geom_col() +
+      labs(
+        title = paste("Deaths by Age for:", input$cod_choice),
+        x = "Victim Age Group",
+        y = "Death Count"
+      ) +
+      theme_classic()
+    #ggplot of the filtered data 
+    ggplotly(p) #turns into plotly
+  })
+}
+
+shinyApp(ui, server) #ui=page layout for shiny, server= plotly 
+#runs the App using the UI and server we just defined
+
+#note: when setting up, make sure to include runtime:shiny???
+#---
+#title: "COD Dashboard"
+#output: 
+ # flexdashboard::flex_dashboard:
+ #   orientation: columns
+#runtime: shiny
+#---
 ```
 
-### Best Sellers
-
-```{r}
-set.seed(2)
-
-nprods <- 10
-
-dfitems %>% 
-  sample_n(nprods) %>% 
-  .$labels %>% 
-  rep(times = sort(sample( 1e4:2e4, size = nprods), decreasing = TRUE)) %>% 
-  factor(levels = unique(.)) %>% 
-  hchart(showInLegend = FALSE, name = "Sales", pointWidth = 10) %>% 
-  hc_add_theme(thm) %>% 
-  hc_chart(type = "bar")
-  
-```
