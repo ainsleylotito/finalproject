@@ -87,12 +87,6 @@ unique(mortality$year)
 
 We now have 3,262 observations (it removed 1,373 obsevations)  
 
-### Saving cleaned dataset 
-We are going to save the cleaned mortality df to our data folder so it can be joined with the National Park dataframe for future analysis. 
-
-```{r}
-write.csv(mortality, "../data/mortality_clean.csv", row.names = TRUE)
-```
 
 # Exploratory analysis 
 
@@ -179,7 +173,7 @@ We can probably condense "Legal Intervention" in the Other category since there 
 
 We are going to condense the Medical categories together, since there is no information about whether the PA caused the medical event to occur, just that it happened simultaneously. 
 
-I am going to create a new variable that has these cleaned up, and then summarize before creating a new basic plot then moving on with more details. I am also going to make an even BROADER categorization, which removes some information but will be useful in figuring out which parks have larger general trends for mortality causes. 
+I am going to create a new variable that has these cleaned up, and then summarize before creating a new basic plot then moving on with more details. 
 
 ```{r}
 mortality <- mortality %>% 
@@ -192,45 +186,18 @@ mortality <- mortality %>%
     
     #All other categories Consistent
     TRUE ~ death_group #keep original death_group codings
-  ), 
-  cod_broad = case_when(
-      # Medical
-      death_group %in% c(
-        "Medical - During physical activity",
-        "Medical - Not during physical activity",
-        "Medical - Unknown"
-      ) ~ "Medical",
-
-      # Unintentional Injury - Water
-      death_group == "Drowning" ~ "Unintentional - Water",
-
-      # Unintentional Injury - Falls
-      death_group == "Fall" ~ "Unintentional - Fall",
-
-      # Transportation
-      death_group %in% c("Motor Vehicle Crash", "Other Transportation") ~ 
-        "Unintentional - Transportation",
-
-      # Environmental & Wildlife
-      death_group %in% c("Environmental", "Wildlife Incident") ~
-        "Unintentional - Environmental",
-
-      # Poisoning
-      death_group == "Poisoning" ~ "Unintentional - Poisoning",
-
-      # Intentional
-      death_group == "Suicide" ~ "Intentional - Suicide",
-      death_group == "Homicide" ~ "Intentional - Homicide",
-      death_group == "Legal Intervention" ~ "Intentional - Homicide",
-
-      # Other / Undetermined
-      death_group %in% c("Other", "Undetermined") ~ "Other / Undetermined",
-
-      TRUE ~ "Other / Undetermined"
-    )) 
+  ))
 ```
 
-Now, let's create two new plots with these new categorizations: 
+### Saving cleaned dataset 
+We are going to save the cleaned mortality df to our data folder so it can be joined with the National Park dataframe for future analysis. 
+
+```{r}
+write.csv(mortality, "../data/mortality_clean.csv", row.names = TRUE)
+```
+
+
+Now, let's create two new plots with the new categorization: 
 ```{r} 
 #COD
 #starting simple plot  
@@ -249,42 +216,12 @@ cod_plot <- cod_plot %>% layout(yaxis = list(title = 'Mortality Count'), barmode
 
 cod_plot 
 
-#COD Broad 
-cod_broad_count <- mortality %>% 
-  group_by(cod_broad) %>%  
-  summarize(mortality_count = n(), .groups = "drop")
-
-cod_broad_count <-plot_ly(
-  data = cod_broad_count,
-  x = ~cod_broad,
-  y = ~mortality_count, 
-  name = "Death Counts by Cause of Death", 
-  type = "bar"
-) 
-cod_broad_count <- cod_broad_count %>% layout(yaxis = list(title = 'Mortality Count'), barmode = 'group') %>% layout(xaxis = list(title = 'Cause of Death'), barmode = 'group')
-
-cod_broad_count 
 ```  
 
 Now, I want to explore how cause of death changes based on some other facets. 
 I want to explore how the distribution of deaths by age group change depending on COD (facet by COD, bars are age groups).  
-I will make a plot for the first COD categorization first: 
 ```{r cod_by_age, fig.height = 25, fig.width = 9}
-#COD simple 
-
-#creating df with needed data 
-cod_by_age <- mortality %>% 
-  group_by(cod, age_range) %>%  
-  summarize(mortality_count = n(), .groups = "drop")  
-
-#going to reorder by cods with most deaths in general 
-cod_order <- cod_by_age %>%
-  group_by(cod) %>%
-  summarize(total_mort = sum(mortality_count)) %>%
-  arrange(desc(total_mort))
-cod_by_age$cod <- factor(cod_by_age$cod, levels = cod_order$cod)
-
-
+ 
 #plotting 
 p_age <- ggplot(cod_by_age, aes(x = age_range, y = mortality_count)) +
   geom_col() +
@@ -304,32 +241,77 @@ cod_by_age_plot
 
 #look into shiny embedding https://testing-apps.shinyapps.io/flexdashboard-shiny-embedding/
 
-``` 
-This is the plot option that we decided to put in our flexdashboard, so there is some extra code cleaning it up. I also am going to continue exploration below, but we didn't end up using any of the following maps. 
+```  
 
-Next, using the broad COD categorization:  
-```{r codb_by_age, fig.height = 15, fig.width = 10}
-#COD broad 
+```{r}
+mortality <- read.csv("../data/mortality_clean.csv")
 
-#creating df with needed data 
-codb_by_age <- mortality %>% 
-  group_by(cod_broad, age_range) %>%  
-  summarize(mortality_count = n(), .groups = "drop")  
 
-#plotting 
-p_ageb <- ggplot(codb_by_age, aes(x = age_range, y = mortality_count)) +
-  geom_col() +
-  facet_wrap(~ cod_broad, ncol = 2) +
-  labs(title = "Death Counts by Cause of Death and Age",
-       x = "Victim Age Group", 
-       y = "Death Count") + 
-  theme_classic() + 
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+#shiny in here 
+library(shiny)
 
-codb_by_age_plot <- ggplotly(p_ageb)
-codb_by_age_plot
+# your data creation
+cod_by_age <- mortality %>% 
+  group_by(cod, age_range) %>%  
+  summarize(mortality_count = n(), .groups = "drop")
+
+cod_order <- cod_by_age %>%
+  group_by(cod) %>%
+  summarize(total_mort = sum(mortality_count)) %>%
+  arrange(desc(total_mort))
+
+cod_by_age$cod <- factor(cod_by_age$cod, levels = cod_order$cod)
+
+#UI Function
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("cod_choice", "Select Cause of Death:", 
+                  choices = levels(cod_by_age$cod))
+    ),
+    mainPanel(
+      plotlyOutput("codPlot")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$codPlot <- renderPlotly({
+    
+    filtered <- cod_by_age %>% 
+      filter(cod == input$cod_choice)
+    
+    p <- ggplot(filtered, aes(x = age_range, y = mortality_count)) +
+      geom_col() +
+      labs(
+        title = paste("Deaths by Age for:", input$cod_choice),
+        x = "Victim Age Group",
+        y = "Death Count"
+      ) +
+      theme_classic()
+    
+    ggplotly(p)
+  })
+}
+
+shinyApp(ui, server) #ui=page layout for shiny, server= plotly
+
+#note: when setting up, make sure to include runtime:shiny???
+#---
+#title: "COD Dashboard"
+#output: 
+ # flexdashboard::flex_dashboard:
+ #   orientation: columns
+#runtime: shiny
+#---
 
 ```
+
+
+
+This is the plot option that we decided to put in our flexdashboard, so there is some extra code cleaning it up. I also am going to continue exploration below, but we didn't end up using any of the following maps. 
+
+
 
 Now, I want to look at which Parks have the highest death count for each of these categories. For each COD, I am going to show the Parks with the top 5-10 death counts for each COD.  
 ```{r, fig.width = 8, fig.height = 7}
