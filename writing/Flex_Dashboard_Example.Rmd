@@ -1,6 +1,6 @@
 ---
 title: "Sales Report with Highcharter"
-author: "Jackson DeCook, Neda Safari, "
+author: "Jackson DeCook, Neda Safari, Kalex Robedo, Ainsley Lotito"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
