@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "Exploring deaths in National Parks in the U.S."
 author: "Jackson DeCook, Neda Safari, Kalex Robedo, Ainsley Lotito"
 output: 
   flexdashboard::flex_dashboard:
@@ -65,7 +65,7 @@ highchart() %>%
 
 ```
 
-### Sales by State
+### Death Table in National Parks
 
 ```{r}
 library(tidyverse)
