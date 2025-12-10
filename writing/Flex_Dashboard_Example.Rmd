@@ -1,12 +1,6 @@
 ---
-title: "Sales Report Example Code Dashboard"
-author: "Jackson DeCook"
-date: "2025-12-03"
-output: html_document
----
----
 title: "Sales Report with Highcharter"
-author: "Joshua Kunst"
+author: "Jackson DeCook, Neda Safari, "
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -38,26 +32,9 @@ thm <-
 
 ```
 
-Column {data-width=600}
------------------------------------------------------------------------
+## Column {data-width="600"}
 
 ### Sales Forecast
-
-```{r}
-library(tidyverse)
-library(DT)
-MortalityData<- read.csv("../data/mortality_clean.csv")
-mortalityCount<- MortalityData%>%
-  group_by(park, death_cause, age_range) %>%
-  summarize(death_count=n())%>%
-  ungroup()%>%
-  arrange(desc(death_count))
-
-datatable(mortalityCount, options = list(pageLength = 5))
-
-```
-
-### Sales by State
 
 ```{r}
 data("USArrests", package = "datasets")
@@ -81,10 +58,27 @@ highchart() %>%
   hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
   hc_mapNavigation(enabled = TRUE) %>%
   hc_add_theme(thm)
+
+
 ```
 
-Column {.tabset data-width=400}
------------------------------------------------------------------------
+### Sales by State
+
+```{r}
+library(tidyverse)
+library(DT)
+MortalityData<- read.csv("../data/mortality_clean.csv")
+mortalityCount<- MortalityData%>%
+  group_by(park, death_cause, age_range) %>%
+  summarize(death_count=n())%>%
+  ungroup()%>%
+  arrange(desc(death_count))
+
+datatable(mortalityCount, options = list(pageLength = 5))
+
+```
+
+## Column {.tabset data-width="400"}
 
 ### Sales by Category
 
