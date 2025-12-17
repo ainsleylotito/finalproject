@@ -13,6 +13,7 @@ output:
 library(highcharter)
 library(dplyr)
 library(viridisLite)
+library(arules)
 library(forecast)
 library(treemap)
 library(flexdashboard) 
@@ -32,6 +33,14 @@ thm <-
     )
   )
 
+```
+
+## Column {data-width="350"}
+
+### About This Dashboard
+
+```{r, echo=FALSE, results='asis'}
+cat(readLines("descriptive_text.rmd"), sep = "\n")
 ```
 
 ## Column {data-width="600"}
