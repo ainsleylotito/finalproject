@@ -31,7 +31,7 @@ thm <-
     xAxis = list(
       gridLineWidth = 1
     )
-  )
+  ) 
 
 ```
 
@@ -40,7 +40,7 @@ thm <-
 ### About This Dashboard
 
 ```{r, echo=FALSE, results='asis'}
-cat(readLines("DescriptiveText.rmd"), sep = "\n")
+htmltools::includeHTML("../writing/DescriptiveText.html")
 ```
 
 ## Column {data-width="600"}
