@@ -45,7 +45,7 @@ cat(readLines("DescriptiveText.rmd"), sep = "\n")
 
 ## Column {data-width="600"}
 
-### Sales Forecast
+### Mortality Map
 
 ```{r}
 library(tidyverse)
@@ -84,7 +84,7 @@ hcmap("countries/us/us-all",
   hc_title(text = "National Park Mortality Counts")
 ```
 
-### Death Table in National Parks
+### Explore National Park Death Trends
 
 ```{r}
 library(tidyverse)
