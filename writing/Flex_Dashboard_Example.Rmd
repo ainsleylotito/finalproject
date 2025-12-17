@@ -40,7 +40,7 @@ thm <-
 ### About This Dashboard
 
 ```{r, echo=FALSE, results='asis'}
-cat(readLines("descriptive_text.rmd"), sep = "\n")
+cat(readLines("DescriptiveText.rmd"), sep = "\n")
 ```
 
 ## Column {data-width="600"}
