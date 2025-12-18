@@ -28,7 +28,7 @@ aids a local law enforcement agency in the local community)
 • Data from calendar year 2007 to 2013 that is not validated
 • Data from calendar year 2020 to the present that is not validated  
 
-####DATA DICTIONARY 
+#### DATA DICTIONARY 
 
 **Intent**
 Identifies whether a death was caused by a purposeful act, an unplanned/unintended act, or a natural/medical event.
@@ -177,4 +177,4 @@ This week's data is from [dataisplural/data.world](https://data.world/inform8n/u
 ## Analysis 
 
 Within both the files **Cleaning_National_Park.Rmd** and **CleaningMortality.Rmd** (located within the `/writing` folder) we conducted exploratory analysis to look through our data. 
-We then created a FlexDashboard to display our analysis, which includes all code used to produce the visualizations from the cleaned datasets we produced in the prior step. This FlexDashboard is contained within the **[FILLINLATER]** file (located within the `/writing` folder).
+We then created a FlexDashboard to display our analysis, which includes all code used to produce the visualizations from the cleaned datasets we produced in the prior step. This FlexDashboard is contained within the **Flex_Dashboard** file (located within the `/writing` folder). 
