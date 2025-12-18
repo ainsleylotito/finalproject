@@ -67,6 +67,7 @@ park_map_data <- read.csv("../data/park_map_data.csv")
 # showInLegend = FALSE hides the base map from the legend
 hcmap("countries/us/us-all", 
       nullColor = "#d3d3d3",
+      borderColor = "#000000",
       borderWidth = 0.5,
       showInLegend = FALSE) %>%
   # hc_add_series adds a new layer to the map - in this case, bubbles
