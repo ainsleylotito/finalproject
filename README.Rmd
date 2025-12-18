@@ -177,4 +177,6 @@ This week's data is from [dataisplural/data.world](https://data.world/inform8n/u
 ## Analysis 
 
 Within both the files **Cleaning_National_Park.Rmd** and **CleaningMortality.Rmd** (located within the `/writing` folder) we conducted exploratory analysis to look through our data. 
-We then created a FlexDashboard to display our analysis, which includes all code used to produce the visualizations from the cleaned datasets we produced in the prior step. This FlexDashboard is contained within the **Flex_Dashboard** file (located within the `/writing` folder). 
+
+We then created a FlexDashboard to display our analysis. We first created separate Rmarkdown files to create individual components which would go inside the Dashboard, within the files **MapInteractive.Rmd** and **MortalityTable.Rmd**. The Flexdashboard  includes all code used to produce the visualizations from the cleaned datasets we produced in the prior step, as well as a new textfile explaining the data and key findings. This FlexDashboard is contained within the **Flex_Dashboard** file (located within the `/writing` folder).  
+
